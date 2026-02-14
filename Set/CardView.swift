@@ -33,6 +33,10 @@ struct CardView: View {
                 }
                 .padding()
             }
+            .scaleEffect(card.isMatched ? 1.1 : 1.0)
+            .rotationEffect(isPartOfMismatch ? .degrees(5) : .degrees(0))
+            .animation(.easeInOut(duration: 0.5), value: card.isMatched)
+            .animation(.easeInOut(duration: 0.3).repeatCount(3, autoreverses: true), value: isPartOfMismatch )
         }
         .aspectRatio(2/3, contentMode: .fit)
     }
