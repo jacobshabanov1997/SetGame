@@ -21,6 +21,18 @@ class SetGameViewModel: ObservableObject {
         model.deck.count
     }
     
+    var discardedCount: Int {
+        model.discardedCards.count
+    }
+    
+    var deckCards: [SetCard] {
+        model.deck
+    }
+    
+    var discardedCards: [SetCard] {
+        model.discardedCards
+    }
+    
     var selectedCards: [SetCard] {
         model.selectedCards
     }
@@ -30,7 +42,7 @@ class SetGameViewModel: ObservableObject {
         return selected.count == 3 && !model.isSet(selected)
     }
     
-    // MARK: Intents
+    // MARK: - Intents
     
     func choose(_ card: SetCard) {
         model.choose(card)
@@ -42,5 +54,11 @@ class SetGameViewModel: ObservableObject {
     
     func newGame() {
         model.newGame()
+    }
+    
+    func shuffle() {
+        withAnimation {
+            model.shuffle()
+        }
     }
 }

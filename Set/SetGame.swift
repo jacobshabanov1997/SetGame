@@ -16,6 +16,8 @@ struct SetCard: Identifiable {
     
     var isSelected: Bool = false
     var isMatched: Bool = false
+    var isDealing: Bool = false
+    var isDiscarding: Bool = false 
     
     enum NumbersOfShapes: Int, CaseIterable {
         case one = 1
@@ -45,6 +47,7 @@ struct SetCard: Identifiable {
 struct SetGame {
     private(set) var deck: [SetCard]
     private(set) var cardsInPlay: [SetCard]
+    private(set) var discardedCards: [SetCard] = []
     
     init() {
         var cards: [SetCard] = []
@@ -86,6 +89,7 @@ struct SetGame {
     
     private mutating func handleThreeCardsSelected(choosingCardAt index: Int) {
         let threeCards = selectedCards
+        let chosenCardId = cardsInPlay[index].id
         
         if isSet(threeCards) {
             for card in threeCards {
@@ -95,10 +99,10 @@ struct SetGame {
                 }
             }
             
-            replaceMatchedCards()
+            discardMatchesCards()
             
-            if !threeCards.contains(where: { $0.id == cardsInPlay[index].id }) {
-                cardsInPlay[index].isSelected = true
+            if let newIndex = cardsInPlay.firstIndex(where: { $0.id == chosenCardId }) {
+                cardsInPlay[newIndex].isSelected = true
             }
         } else {
             for card in threeCards {
@@ -108,17 +112,23 @@ struct SetGame {
             }
             cardsInPlay[index].isSelected = true
         }
-        
-        if !cardsInPlay[index].isMatched {
-            cardsInPlay[index].isSelected = true
-        }
     }
     
-    mutating func replaceMatchedCards() {
-        let matchedCards = cardsInPlay.filter({ $0.isMatched })
-        guard !matchedCards.isEmpty else { return }
+    mutating func discardMatchesCards() {
+        let matchedCards = cardsInPlay.filter { $0.isMatched }
+        discardedCards.append(contentsOf: matchedCards)
+        
         cardsInPlay.removeAll { $0.isMatched }
-        let numberOfCardsToAdd = min(matchedCards.count, deck.count)
+    }
+    
+    mutating func dealThreeMoreCards() {
+        let hasMatchedCards = cardsInPlay.contains(where: { $0.isMatched })
+        
+        if hasMatchedCards {
+            discardMatchesCards()
+        }
+    
+        let numberOfCardsToAdd = min(3, deck.count)
         
         if numberOfCardsToAdd > 0 {
             let newCards = Array(deck.prefix(numberOfCardsToAdd))
@@ -127,22 +137,12 @@ struct SetGame {
         }
     }
     
-    mutating func dealThreeMoreCards() {
-        if selectedCards.count == 3 && isSet(selectedCards) {
-            replaceMatchedCards()
-        } else {
-            let numberOfCardsToAdd = min(3, deck.count)
-            
-            if numberOfCardsToAdd > 0 {
-                let newCards = Array(deck.prefix(numberOfCardsToAdd))
-                cardsInPlay.append(contentsOf: newCards)
-                deck.removeFirst(numberOfCardsToAdd)
-            }
-        }
-    }
-    
     mutating func newGame() {
         self = SetGame()
+    }
+    
+    mutating func shuffle() {
+        cardsInPlay.shuffle()
     }
     
     var selectedCards: [SetCard] {
